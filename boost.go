@@ -10,6 +10,10 @@ import (
 
 type FIL int64
 
+func Ptr[T any](v T) *T {
+	return &v
+}
+
 type Cmd struct {
 	name string
 	args []string
@@ -40,15 +44,9 @@ func (c *Cmd) runStruct(args []string, s interface{}) {
 		// v.Field(i).Type().Kind() == reflect.String
 		// v.Type().Field(i).Name
 
-		val := v.Field(i).Interface()
-		switch val {
-		case false:
-		case 0:
-		case uint64(0):
-		case int64(0):
-		case "":
-		default:
-			args = append(args, fmt.Sprintf("%v%v", v.Type().Field(i).Tag, val))
+		val := v.Field(i)
+		if !val.IsNil() {
+			args = append(args, fmt.Sprintf("%v%v", v.Type().Field(i).Tag, val.Elem()))
 		}
 	}
 
@@ -60,19 +58,19 @@ func (c *Cmd) Init() {
 }
 
 type DealArgs struct {
-	HttpUrl            string "--http-url="
-	HttpHeaders        string "--http-headers="
-	Provider           string "--provider="
-	Commp              string "--commp="
-	PieceSize          uint64 "--piece-size="
-	CarSize            uint64 "--car-size="
-	PayloadCid         string "--payload-cid="
-	StartEpoch         int    "--start-epoch="
-	Duration           int    "--duration="
-	ProviderCollateral int    "--provider-collateral="
-	StoragePrice       int64  "--storage-price="
-	Verified           bool   "--verified="
-	Wallet             string "--wallet="
+	HttpUrl            *string "--http-url="
+	HttpHeaders        *string "--http-headers="
+	Provider           *string "--provider="
+	Commp              *string "--commp="
+	PieceSize          *uint64 "--piece-size="
+	CarSize            *uint64 "--car-size="
+	PayloadCid         *string "--payload-cid="
+	StartEpoch         *int    "--start-epoch="
+	Duration           *int    "--duration="
+	ProviderCollateral *int    "--provider-collateral="
+	StoragePrice       *int64  "--storage-price="
+	Verified           *bool   "--verified="
+	Wallet             *string "--wallet="
 }
 
 func (c *Cmd) Deal(args DealArgs) {
@@ -80,9 +78,9 @@ func (c *Cmd) Deal(args DealArgs) {
 }
 
 type DealStatusArgs struct {
-	Provider string "--provider="
-	DealUuid string "--deal-uuid="
-	Wallet   string "--wallet="
+	Provider *string "--provider="
+	DealUuid *string "--deal-uuid="
+	Wallet   *string "--wallet="
 }
 
 func (c *Cmd) DealStatus(args DealStatusArgs) {
@@ -90,17 +88,17 @@ func (c *Cmd) DealStatus(args DealStatusArgs) {
 }
 
 type OfflineDealArgs struct {
-	Provider           string "--provider="
-	Commp              string "--commp="
-	PieceSize          uint64 "--piece-size="
-	CarSize            uint64 "--car-size="
-	PayloadCid         string "--payload-cid="
-	StartEpoch         int    "--start-epoch="
-	Duration           int    "--duration="
-	ProviderCollateral int    "--provider-collateral="
-	StoragePrice       int64  "--storage-price="
-	Verified           bool   "--verified="
-	Wallet             string "--wallet="
+	Provider           *string "--provider="
+	Commp              *string "--commp="
+	PieceSize          *uint64 "--piece-size="
+	CarSize            *uint64 "--car-size="
+	PayloadCid         *string "--payload-cid="
+	StartEpoch         *int    "--start-epoch="
+	Duration           *int    "--duration="
+	ProviderCollateral *int    "--provider-collateral="
+	StoragePrice       *int64  "--storage-price="
+	Verified           *bool   "--verified="
+	Wallet             *string "--wallet="
 }
 
 func (c *Cmd) OfflineDeal(args OfflineDealArgs) {
@@ -242,18 +240,17 @@ func (c *Cmd) WalletDelete(address string) {
 }
 
 type walletSignatureOut struct {
-    Signature string
+	Signature string
 }
 
 func (c *Cmd) WalletSign(address, hexMessage string) string {
-    var signature walletSignatureOut
+	var signature walletSignatureOut
 
-    out, err := c.run("wallet", "sign", address, hexMessage)
-    if err != nil {
-        // TODO: add error checking
-    }
+	out, err := c.run("wallet", "sign", address, hexMessage)
+	if err != nil {
+		// TODO: add error checking
+	}
 
-    json.Unmarshal(out, &signature)
-    return signature.Signature
+	json.Unmarshal(out, &signature)
+	return signature.Signature
 }
-
