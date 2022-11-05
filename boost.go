@@ -240,3 +240,20 @@ func (c *Cmd) WalletSetDefault(address string) {
 func (c *Cmd) WalletDelete(address string) {
 	c.run("wallet", "delete", address)
 }
+
+type walletSignatureOut struct {
+    Signature string
+}
+
+func (c *Cmd) WalletSign(address, hexMessage string) string {
+    var signature walletSignatureOut
+
+    out, err := c.run("wallet", "sign", address, hexMessage)
+    if err != nil {
+        // TODO: add error checking
+    }
+
+    json.Unmarshal(out, &signature)
+    return signature.Signature
+}
+
